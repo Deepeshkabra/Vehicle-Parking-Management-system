@@ -7,6 +7,13 @@ class Config:
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = True  # Set to False in production
 
+     # Admin credentials
+    ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@example.com")
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
+    ADMIN_NAME = os.environ.get("ADMIN_NAME", "Administrator")
+
+
+
 class DevelopmentConfig(Config):
     DEBUG = True
     
