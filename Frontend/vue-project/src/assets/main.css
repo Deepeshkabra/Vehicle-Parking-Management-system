@@ -1,0 +1,58 @@
+@import './base.css';
+
+/* Reset default Vue styles that conflict with Bootstrap */
+#app {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  font-weight: normal;
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Remove Vue default grid layout */
+body {
+  display: block;
+  place-items: unset;
+}
+
+/* Override Vue link styles to work with Bootstrap */
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: 0.3s;
+  padding: 0;
+}
+
+a:hover {
+  background-color: transparent;
+}
+
+/* Ensure Bootstrap takes precedence */
+.btn, .nav-link, .navbar-brand {
+  color: inherit !important;
+}
+
+/* Remove Vue responsive styles that conflict */
+@media (min-width: 1024px) {
+  body {
+    display: block;
+    place-items: unset;
+  }
+
+  #app {
+    display: block;
+    grid-template-columns: none;
+    padding: 0;
+  }
+}
+
+/* Ensure smooth scrolling works globally */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Fix for sections with fixed navbar */
+section {
+  scroll-margin-top: 70px;
+}
