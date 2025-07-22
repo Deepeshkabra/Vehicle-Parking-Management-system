@@ -31,7 +31,7 @@ class User(db.Model):
     
     # Constraints
     __table_args__ = (
-        db.CheckConstraint("role IN ('user')", name='valid_role'),
+        db.CheckConstraint("role IN ('user', 'admin')", name='valid_role'),
     )
 
     def set_password(self, password):
