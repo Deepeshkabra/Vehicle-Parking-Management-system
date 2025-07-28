@@ -11,7 +11,8 @@ from .parking_spot import ParkingSpot
 from .reservation import Reservation
 
 # Export all models for easy import
-__all__ = ['db', 'User', 'ParkingLot', 'ParkingSpot', 'Reservation']
+__all__ = ["db", "User", "ParkingLot", "ParkingSpot", "Reservation"]
+
 
 def init_db(app):
     """Initialize database with the Flask app"""
