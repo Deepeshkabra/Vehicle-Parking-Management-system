@@ -1,0 +1,18 @@
+/* Custom styles that work with Bootstrap */
+.parking-card {
+  border-left: 4px solid var(--bs-primary);
+}
+
+.parking-spot-available {
+  background-color: var(--bs-success);
+}
+
+.parking-spot-occupied {
+  background-color: var(--bs-danger);
+}
+
+/* Use Bootstrap CSS variables */
+.custom-button {
+  background-color: var(--bs-primary);
+  border-color: var(--bs-primary);
+}
