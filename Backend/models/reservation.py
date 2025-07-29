@@ -88,10 +88,10 @@ class Reservation(db.Model):
     def complete_reservation(self):
         """Complete the reservation and calculate final cost"""
         if self.is_active():
-            self.leaving_timestamp = datetime.utcnow()
+            self.leaving_timestamp = datetime.now()
             self.parking_cost = self.calculate_cost()
             self.status = "completed"
-            self.updated_at = datetime.utcnow()
+            self.updated_at = datetime.now()
 
             # Mark parking spot as available
             self.parking_spot.mark_available()

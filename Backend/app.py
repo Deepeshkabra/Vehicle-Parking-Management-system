@@ -24,6 +24,7 @@ from models.reservation import Reservation
 # Import routes
 from routes.auth import auth_bp, check_if_token_revoked
 from routes.admin_routes import admin_bp
+from routes.user_routes import user_bp
 
 # Import error handlers
 from utils.error_handlers import register_error_handlers
@@ -69,18 +70,18 @@ def create_app(config_class=DevelopmentConfig):
             401,
         )
 
-    @jwt.invalid_token_loader
-    def invalid_token_callback(error):
-        return (
-            jsonify(
-                {
-                    "success": False,
-                    "error": "Invalid token",
-                    "message": "Token is invalid. Please login again.",
-                }
-            ),
-            422,
-        )
+    # @jwt.invalid_token_loader
+    # def invalid_token_callback(error):
+    #     return (
+    #         jsonify(
+    #             {
+    #                 "success": False,
+    #                 "error": "Invalid token",
+    #                 "message": "Token is invalid. Please login again.",
+    #             }
+    #         ),
+    #         422,
+    #     )
 
     @jwt.unauthorized_loader
     def missing_token_callback(error):
@@ -111,7 +112,7 @@ def create_app(config_class=DevelopmentConfig):
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
-
+    app.register_blueprint(user_bp)
     # Register error handlers
     register_error_handlers(app)
 
