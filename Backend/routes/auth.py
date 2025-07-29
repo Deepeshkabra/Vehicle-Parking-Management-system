@@ -174,7 +174,7 @@ def register():
     try:
         # Get request data
         data = request.get_json()
-        print(data["username"])
+        print(data)
 
         if not data:
             raise ValidationException("Request body is required")

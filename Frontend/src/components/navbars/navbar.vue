@@ -76,7 +76,7 @@
           <!-- User Navigation -->
           <template v-else-if="authStore.user?.role === 'user'">
             <li class="nav-item">
-              <router-link class="nav-link" to="/dashboard" :class="{ active: $route.path === '/dashboard' }">
+              <router-link class="nav-link" to="/user/dashboard" :class="{ active: $route.path === '/user/dashboard' }">
                 <i class="fas fa-home me-1"></i>
                 Dashboard
               </router-link>
@@ -140,12 +140,6 @@
                 <router-link class="dropdown-item" to="/profile">
                   <i class="fas fa-user me-2"></i>
                   Profile
-                </router-link>
-              </li>
-              <li>
-                <router-link class="dropdown-item" to="/settings">
-                  <i class="fas fa-cog me-2"></i>
-                  Settings
                 </router-link>
               </li>
               <li><hr class="dropdown-divider"></li>

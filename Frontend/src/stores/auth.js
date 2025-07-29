@@ -98,7 +98,8 @@ export const useAuthStore = defineStore('auth', {
           username: userData.username,
           email: userData.email,
           password: userData.password,
-          confirm_password: userData.confirmPassword
+          confirm_password: userData.confirmPassword,
+          phone: userData.phone
         })
 
         const { success, message } = response.data

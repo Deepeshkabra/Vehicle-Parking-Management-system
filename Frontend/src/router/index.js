@@ -5,7 +5,6 @@ import { useAuthStore } from '@/stores/auth'
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
-,
     {
       path: '/login',
       name: 'login',
@@ -43,16 +42,23 @@ const router = createRouter({
       component: () => import('@/views/admin/Users.vue'),
       meta: { requiresAuth: true, requiresRole: 'admin' }
     },
+    // User Routes
+    {
+      path: '/user',
+      name: 'user',
+      redirect: '/user/dashboard',
+      meta: { requiresAuth: true, requiresRole: 'user' }
+    },
+    {
+      path: '/user/dashboard',
+      name: 'user-dashboard',
+      component: () => import('@/views/user/Dashboard.vue'),
+      meta: { requiresAuth: true, requiresRole: 'user' }
+    },
     // {
-    //   path: '/user',
-    //   name: 'user',
-    //   redirect: '/user/dashboard',
-    //   meta: { requiresAuth: true, requiresRole: 'user' }
-    // },
-    // {
-    //   path: '/user/dashboard',
-    //   name: 'user-dashboard',
-    //   component: () => import('../views/user/Dashboard.vue'),
+    //   path: '/user/profile',
+    //   name: 'user-profile',
+    //   component: () => import('@/views/user/Profile.vue'),
     //   meta: { requiresAuth: true, requiresRole: 'user' }
     // }
   ],
