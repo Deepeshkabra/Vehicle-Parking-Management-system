@@ -165,28 +165,34 @@
                     </span>
                   </div>
                   <div class="card-body">
-                    <p class="card-text text-muted small mb-2">{{ lot.address }}</p>
+                    <p class="card-text text-muted small mb-2">{{ lot.address || 'No address provided' }}</p>
                     <div class="mb-2">
                       <small class="text-muted">Pin Code:</small>
-                      <span class="fw-bold">{{ lot.pin_code }}</span>
+                      <span class="fw-bold">{{ lot.pin_code || 'N/A' }}</span>
                     </div>
                     <div class="mb-2">
                       <small class="text-muted">Price:</small>
-                      <span class="fw-bold text-success">₹{{ lot.price }}/hr</span>
+                      <span class="fw-bold text-success">₹{{ lot.price || 0 }}/hr</span>
                     </div>
                     
                     <!-- Spots Visualization -->
                     <div class="parking-spots-grid mb-3">
-                      <small class="text-muted d-block mb-2">Spots ({{ lot.available_spots }}/{{ lot.number_of_spots }})</small>
-                      <div class="spots-container">
+                      <small class="text-muted d-block mb-2">
+                        Spots ({{ lot.available_spots || 0 }}/{{ lot.number_of_spots || 0 }})
+                      </small>
+                      <div class="spots-container" v-if="lot.parking_spots && lot.parking_spots.length > 0">
                         <div 
-                          v-for="spot in lot.parking_spots || []" 
+                          v-for="spot in lot.parking_spots.slice(0, 20)" 
                           :key="spot.id"
                           class="spot-indicator"
                           :class="spot.status === 'A' ? 'available' : 'occupied'"
                           :title="`Spot ${spot.id}: ${spot.status === 'A' ? 'Available' : 'Occupied'}`"
                         ></div>
+                        <div v-if="lot.parking_spots.length > 20" class="text-muted small">
+                          +{{ lot.parking_spots.length - 20 }} more...
+                        </div>
                       </div>
+                      <div v-else class="text-muted small">No spot data available</div>
                     </div>
                   </div>
                   <div class="card-footer bg-transparent">
@@ -206,7 +212,7 @@
                       <button 
                         class="btn btn-outline-danger btn-sm"
                         @click="deleteParkingLot(lot)"
-                        :disabled="!lot.is_empty"
+                        
                       >
                         <i class="fas fa-trash"></i>
                       </button>
@@ -217,7 +223,24 @@
             </div>
 
             <!-- Empty State -->
-            <div v-if="parkingLots.length === 0" class="text-center py-5">
+            <div v-if="loading" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+              </div>
+              <p class="text-muted mt-2">Loading parking lots...</p>
+            </div>
+            
+            <div v-else-if="error" class="text-center py-5">
+              <i class="fas fa-exclamation-triangle fa-3x text-danger mb-3"></i>
+              <h5 class="text-danger">Error Loading Data</h5>
+              <p class="text-muted">{{ error }}</p>
+              <button class="btn btn-primary" @click="refreshParkingLots">
+                <i class="fas fa-refresh me-1"></i>
+                Try Again
+              </button>
+            </div>
+            
+            <div v-else-if="parkingLots.length === 0" class="text-center py-5">
               <i class="fas fa-building fa-3x text-muted mb-3"></i>
               <h5 class="text-muted">No Parking Lots Found</h5>
               <p class="text-muted">Create your first parking lot to get started.</p>
@@ -346,6 +369,8 @@
       v-if="detailsParkingLot"
       :parking-lot="detailsParkingLot"
       @modal-closed="detailsParkingLot = null"
+      @edit-from-details="handleEditFromDetails"
+      @delete-from-details="handleDeleteFromDetails"
     />
   </div>
 </template>
@@ -354,11 +379,37 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useAuthStore } from '../../stores/auth'
 import CreateParkingLotModal from '../../components/admin/CreateParkingLotModal.vue'
-// import EditParkingLotModal from '../../components/admin/EditParkingLotModal.vue'
-// import ParkingLotDetailsModal from '../../components/admin/ParkingLotDetailsModal.vue'
+import EditParkingLotModal from '../../components/admin/EditParkingLotModal.vue'
+import ParkingLotDetailsModal from '../../components/admin/ParkingLotDetailsModal.vue'
 import axios from 'axios'
 
 const authStore = useAuthStore()
+
+// Configure axios defaults
+axios.defaults.baseURL = 'http://localhost:5000' // Adjust to your backend URL
+axios.defaults.headers.common['Content-Type'] = 'application/json'
+
+// Add request interceptor for authentication
+axios.interceptors.request.use((config) => {
+  const token = authStore.token || localStorage.getItem('access_token')
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+  return config
+}, (error) => {
+  return Promise.reject(error)
+})
+
+// Add response interceptor for error handling
+axios.interceptors.response.use((response) => {
+  return response
+}, (error) => {
+  if (error.response?.status === 401) {
+    authStore.logout()
+    // Redirect to login will be handled by router guard
+  }
+  return Promise.reject(error)
+})
 
 // Reactive data
 const parkingLots = ref([])
@@ -368,6 +419,7 @@ const filterStatus = ref('')
 const selectedParkingLot = ref(null)
 const detailsParkingLot = ref(null)
 const loading = ref(false)
+const error = ref('')
 
 const stats = reactive({
   totalLots: 0,
@@ -406,11 +458,19 @@ const occupancyRate = computed(() => {
 const fetchParkingLots = async () => {
   try {
     loading.value = true
+    error.value = ''
     const response = await axios.get('/api/admin/pkl/list')
-    parkingLots.value = response.data.data || []
-    calculateStats()
-  } catch (error) {
-    console.error('Error fetching parking lots:', error)
+    
+    if (response.data && response.data.success) {
+      parkingLots.value = response.data.data || []
+      calculateStats()
+    } else {
+      throw new Error(response.data?.message || 'Failed to fetch parking lots')
+    }
+  } catch (err) {
+    console.error('Error fetching parking lots:', err)
+    error.value = err.response?.data?.message || err.message || 'Error fetching parking lots'
+    parkingLots.value = []
   } finally {
     loading.value = false
   }
@@ -419,35 +479,69 @@ const fetchParkingLots = async () => {
 const fetchRecentUsers = async () => {
   try {
     const response = await axios.get('/api/admin/users')
-    recentUsers.value = (response.data.data || []).slice(0, 5)
-    stats.totalUsers = response.data.data?.length || 0
-  } catch (error) {
-    console.error('Error fetching users:', error)
+    
+    if (response.data && response.data.success) {
+      const users = response.data.data || []
+      recentUsers.value = users.slice(0, 5)
+      stats.totalUsers = users.length
+    }
+  } catch (err) {
+    console.error('Error fetching users:', err)
+    // Don't show error for users fetch as it's not critical
+    recentUsers.value = []
+    stats.totalUsers = 0
   }
 }
 
 const calculateStats = () => {
   stats.totalLots = parkingLots.value.length
-  stats.availableSpots = parkingLots.value.reduce((sum, lot) => sum + (lot.available_spots || 0), 0)
-  stats.occupiedSpots = parkingLots.value.reduce((sum, lot) => sum + ((lot.number_of_spots || 0) - (lot.available_spots || 0)), 0)
+  stats.availableSpots = parkingLots.value.reduce((sum, lot) => {
+    return sum + (lot.available_spots || 0)
+  }, 0)
+  stats.occupiedSpots = parkingLots.value.reduce((sum, lot) => {
+    const total = lot.number_of_spots || 0
+    const available = lot.available_spots || 0
+    return sum + (total - available)
+  }, 0)
 }
 
 const editParkingLot = (lot) => {
+  console.log('Edit button clicked for lot:', lot)
+  detailsParkingLot.value = null // Add this back - closes details modal if open
   selectedParkingLot.value = { ...lot }
+  console.log('selectedParkingLot updated:', selectedParkingLot.value)
 }
 
 const viewParkingLotDetails = (lot) => {
-  detailsParkingLot.value = lot
+  console.log('View button clicked for lot:', lot)
+  selectedParkingLot.value = null // Add this back - closes edit modal if open
+  detailsParkingLot.value = { ...lot }
+  console.log('detailsParkingLot updated:', detailsParkingLot.value)
 }
 
 const deleteParkingLot = async (lot) => {
-  if (!confirm(`Are you sure you want to delete "${lot.prime_location_name}"?`)) return
+  const lotName = lot.prime_location_name || 'this parking lot'
+  
+  if (!confirm(`Are you sure you want to delete "${lotName}"?\n\nThis action cannot be undone.`)) {
+    return
+  }
   
   try {
-    await axios.delete(`/api/admin/pkl/delete/${lot.id}`)
-    await fetchParkingLots()
-  } catch (error) {
-    alert(error.response?.data?.message || 'Error deleting parking lot')
+    loading.value = true
+    const response = await axios.delete(`/api/admin/pkl/delete/${lot.id}`)
+    
+    if (response.data && response.data.success) {
+      await fetchParkingLots()
+      alert('Parking lot deleted successfully!')
+    } else {
+      throw new Error(response.data?.message || 'Failed to delete parking lot')
+    }
+  } catch (err) {
+    console.error('Error deleting parking lot:', err)
+    const errorMsg = err.response?.data?.message || err.message || 'Error deleting parking lot'
+    alert(errorMsg)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -460,23 +554,67 @@ const handleParkingLotUpdated = () => {
   selectedParkingLot.value = null
 }
 
+const handleEditFromDetails = (lot) => {
+  detailsParkingLot.value = null
+  selectedParkingLot.value = { ...lot }
+}
+
+const handleDeleteFromDetails = async (lot) => {
+  detailsParkingLot.value = null
+  await deleteParkingLot(lot)
+}
+
 const refreshParkingLots = () => {
   fetchParkingLots()
 }
 
 const exportData = () => {
-  // Implement export functionality
-  console.log('Export data functionality')
+  try {
+    const dataToExport = {
+      parkingLots: parkingLots.value,
+      stats: stats,
+      exportDate: new Date().toISOString()
+    }
+    
+    const dataStr = JSON.stringify(dataToExport, null, 2)
+    const dataBlob = new Blob([dataStr], { type: 'application/json' })
+    
+    const url = URL.createObjectURL(dataBlob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `parking-lots-export-${new Date().toISOString().split('T')[0]}.json`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    URL.revokeObjectURL(url)
+  } catch (err) {
+    console.error('Error exporting data:', err)
+    alert('Error exporting data. Please try again.')
+  }
 }
 
 const formatDate = (dateString) => {
-  return new Date(dateString).toLocaleDateString()
+  if (!dateString) return 'N/A'
+  try {
+    return new Date(dateString).toLocaleDateString()
+  } catch (err) {
+    return 'Invalid Date'
+  }
 }
 
 // Lifecycle
-onMounted(() => {
-  fetchParkingLots()
-  fetchRecentUsers()
+onMounted(async () => {
+  // Check if user is authenticated
+  if (!authStore.isAuthenticated) {
+    console.warn('User not authenticated')
+    return
+  }
+  
+  // Fetch data in parallel
+  await Promise.all([
+    fetchParkingLots(),
+    fetchRecentUsers()
+  ])
 })
 </script>
 

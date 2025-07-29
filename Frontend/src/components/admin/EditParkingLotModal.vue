@@ -229,45 +229,11 @@ const formData = reactive({
   pin_code: '',
   number_of_spots: 10,
   price: 50,
-  description: '',
-  operating_hours_start: '',
-  operating_hours_end: '',
+  // description: '',
+  // operating_hours_start: '',
+  // operating_hours_end: '',
   is_active: true
 })
-
-//MOVE FUNCTIONS BEFORE THE WATCH
-const showModal = async () => {
-  const modalElement = document.getElementById('editParkingLotModal')
-  console.log('Edit Modal element found:', modalElement)
-  console.log('Bootstrap available:', window.bootstrap)
-  if (modalElement) {
-    if (window.bootstrap && window.bootstrap.Modal) {
-      const modal = new window.bootstrap.Modal(modalElement)
-      modal.show()
-
-      // Listen for modal hidden event
-      modalElement.addEventListener('hidden.bs.modal', closeModal, { once: true })
-    } else {
-      console.error('Bootstrap not available for edit modal!')
-    }
-  } else {
-    console.error('Edit modal element not found!')
-  }
-  if (modalElement) {
-    if (window.bootstrap && window.bootstrap.Modal) {
-      const modal = window.bootstrap.Modal(modalElement)
-      if (modal) {
-        modal.hide()
-      }
-    }
-  }
-}
-
-watch(() => props.parkingLot, (newParkingLot) => {
-    if (newParkingLot) {
-      showModal()
-    }
-  }, { immediate: true })
 
 const populateForm = (lot) => {
   Object.assign(formData, {
@@ -276,24 +242,31 @@ const populateForm = (lot) => {
     pin_code: lot.pin_code || '',
     number_of_spots: lot.number_of_spots || 10,
     price: lot.price || 50,
-    description: lot.description || '',
-    operating_hours_start: lot.operating_hours_start || '',
-    operating_hours_end: lot.operating_hours_end || '',
+    // description: lot.description || '',
+    // operating_hours_start: lot.operating_hours_start || '',
+    // operating_hours_end: lot.operating_hours_end || '',
     is_active: lot.is_active !== undefined ? lot.is_active : true
   })
 }
 
-// const showModal = async () => {
-//   await nextTick()
-//   const modalElement = document.getElementById('editParkingLotModal')
-//   if (modalElement) {
-//     const modal = new bootstrap.Modal(modalElement)
-//     modal.show()
-    
-//     // Listen for modal hidden event
-//     modalElement.addEventListener('hidden.bs.modal', closeModal, { once: true })
-//   }
-// }
+const showModal = async () => {
+  await nextTick()
+  const modalElement = document.getElementById('editParkingLotModal')
+  
+  if (modalElement) {
+    if (window.bootstrap && window.bootstrap.Modal) {
+      const modal = new window.bootstrap.Modal(modalElement)
+      modal.show()
+
+      // Listen for modal hidden event
+      modalElement.addEventListener('hidden.bs.modal', closeModal, { once: true })
+    } else {
+      console.error('Bootstrap not available!')
+    }
+  } else {
+    console.error('Modal element not found!')
+  }
+}
 
 const updateParkingLot = async () => {
   loading.value = true
@@ -321,7 +294,7 @@ const updateParkingLot = async () => {
 const closeModal = () => {
   const modalElement = document.getElementById('editParkingLotModal')
   if (modalElement) {
-    const modal = bootstrap.Modal.getInstance(modalElement)
+    const modal = window.bootstrap.Modal.getInstance(modalElement)
     if (modal) {
       modal.hide()
     }
@@ -329,12 +302,22 @@ const closeModal = () => {
   emit('modal-closed')
 }
 
-onMounted(() => {
+// Watch for prop changes and populate form + show modal
+watch(() => props.parkingLot, async (newParkingLot) => {
+  if (newParkingLot) {
+    populateForm(newParkingLot)
+    await nextTick()
+    showModal()
+  }
+}, { immediate: true })
+
+onMounted(async () => {
   if (props.parkingLot) {
     populateForm(props.parkingLot)
+    await nextTick()
+    showModal()
   }
 })
-
 </script>
 
 <style scoped>

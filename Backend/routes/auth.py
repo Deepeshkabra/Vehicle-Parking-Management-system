@@ -65,6 +65,7 @@ def login():
     try:
         # Get request data
         data = request.get_json()
+        print(data)
         if not data:
             raise ValidationException("Request body is required")
 
@@ -74,7 +75,7 @@ def login():
         admin_password = Config.ADMIN_PASSWORD
         print(admin_password)
         if (
-            data.get("email") == admin_email.lower()
+            data.get("username") == admin_email.lower()
             and data.get("password") == admin_password
         ):
 
@@ -85,7 +86,7 @@ def login():
             admin_data = {
                 "id": "admin0",
                 "username": "admin",
-                "email": admin_email,
+                "email": admin_email,   
                 "role": "admin",
                 "is_active": True,
                 "created_at": None,
@@ -154,6 +155,7 @@ def login():
         )
 
     except ValidationException as e:
+        current_app.logger.error(f"Validation error: {str(e)}")
         return create_error_response(e.message, e.errors, 400)
     except UnauthorizedException as e:
         return create_error_response(e.message, status_code=401)
