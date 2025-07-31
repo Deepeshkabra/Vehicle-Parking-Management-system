@@ -1,0 +1,3 @@
+reservation_id,slot_id,spot_id,parking_lot_name,parking_lot_address,parking_timestamp,leaving_timestamp,duration_hours,parking_cost,currency,status,remarks,created_at
+7,51,SPOT-51,Kothri,123 street ABC Highway,2025-07-31 01:11:00,2025-07-31 01:11:14,N/A,50.00,USD,Completed,Reservation created successfully,2025-07-30 19:41:00
+6,1,SPOT-1,ashta,"123 Main Street, Downtown District, City",2025-07-31 01:10:42,2025-07-31 01:11:08,0.01,25.00,USD,Completed,Reservation created successfully,2025-07-30 19:40:42

@@ -8,7 +8,8 @@ from flask import Flask, jsonify
 from flask_jwt_extended import JWTManager
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
-
+from jobs import user_jobs
+from flask_mail import Mail
 # Import configuration
 from config import Config, DevelopmentConfig
 
@@ -25,6 +26,11 @@ from models.reservation import Reservation
 from routes.auth import auth_bp, check_if_token_revoked
 from routes.admin_routes import admin_bp
 from routes.user_routes import user_bp
+
+
+from jobs.celery_app import make_celery, configure_celery
+
+from utils.cache_manager import CacheManager
 
 # Import error handlers
 from utils.error_handlers import register_error_handlers
@@ -45,7 +51,17 @@ def create_app(config_class=DevelopmentConfig):
 
     # Initialize extensions
     db.init_app(app)
+    configure_celery(app)
+    celery = make_celery(app)
+    mail = Mail(app)
 
+    #Initialize Cache
+    cache_manager = CacheManager(app)
+    
+    app.extensions['celery'] = celery
+    app.extensions['mail'] = mail
+    with app.app_context():
+        from jobs.celery_app import user_jobs
     # Initialize JWT
     jwt = JWTManager(app)
 
@@ -69,19 +85,6 @@ def create_app(config_class=DevelopmentConfig):
             ),
             401,
         )
-
-    # @jwt.invalid_token_loader
-    # def invalid_token_callback(error):
-    #     return (
-    #         jsonify(
-    #             {
-    #                 "success": False,
-    #                 "error": "Invalid token",
-    #                 "message": "Token is invalid. Please login again.",
-    #             }
-    #         ),
-    #         422,
-    #     )
 
     @jwt.unauthorized_loader
     def missing_token_callback(error):
@@ -150,11 +153,11 @@ def create_app(config_class=DevelopmentConfig):
             }
         )
 
-    return app
+    return app, celery
 
 
 # Create app instance
-app = create_app()
+app, celery = create_app()
 
 if __name__ == "__main__":
     app.run(debug=True)

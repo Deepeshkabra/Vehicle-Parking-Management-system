@@ -28,24 +28,24 @@ from schemas.parking_lot import (
     ParkingLotDelete,
 )
 from utils.error_handlers import (
-    ValidationException,
-    UnauthorizedException,
-    ForbiddenException,
     create_success_response,
     create_error_response,
     validate_request_data,
 )
 from utils.validation_utils import validate_user_permissions
+from utils.cache_manager import cached_response, cached_query, cache_manager
 
-# Create blueprint for authentication routes
+
+
 admin_bp = Blueprint("admin", __name__)
 
-# JWT token blacklist (in production, use Redis or database)
+
 blacklisted_tokens = set()
 
 
 @admin_bp.route("/api/admin/users", methods=["GET"])
 @jwt_required()
+@cached_response("user_list", "user_list", 900)
 def get_all_users():
     """Get All user details for admin"""
     jwt_data = get_jwt()
@@ -157,6 +157,7 @@ def delete_pkl(lot_id):
 
 @admin_bp.route("/api/admin/pkl/<int:lot_id>", methods=["GET"])
 @jwt_required()
+@cached_response("parking_lots", "parking_lots_cache", 600)
 def get_pkl(lot_id):
     """Get a parking lot"""
     jwt_data = get_jwt()
@@ -173,6 +174,7 @@ def get_pkl(lot_id):
 
 @admin_bp.route("/api/admin/pkl/list", methods=["GET"])
 @jwt_required()
+@cached_response("parking_lots", "parking_lots_cache", 600)
 def get_all_pkl():
     """Get all parking lots"""
     jwt_data = get_jwt()
@@ -188,4 +190,6 @@ def get_all_pkl():
         current_app.logger.error(f"Error retrieving parking lots: {str(e)}")
         return create_error_response("Internal server error", status_code=500)
 
-# @admin_bp.route("/api/admin/pkl/summary", methods=["GET"])
+
+
+

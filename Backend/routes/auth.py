@@ -5,7 +5,7 @@ Handles user registration, login, admin authentication, and JWT token management
 
 from flask import Blueprint, request, jsonify, current_app
 from flask_jwt_extended import (
-    JWTManager,
+
     create_access_token,
     create_refresh_token,
     jwt_required,
@@ -14,9 +14,9 @@ from flask_jwt_extended import (
 )
 from datetime import datetime, timedelta
 from sqlalchemy.exc import IntegrityError
-from pydantic import ValidationError
 
-# Import admin credentials from config
+
+
 from config import Config
 
 # Import models and utilities
@@ -44,23 +44,6 @@ def login():
     """
     Unified login endpoint for both admin and users
 
-    Expected JSON body:
-    {
-        "username": "user@example.com or username or admin@example.com",
-        "password": "password123",
-        "remember_me": false
-    }
-
-    Returns:
-    {
-        "success": true,
-        "message": "Login successful",
-        "data": {
-            "access_token": "eyJ...",
-            "refresh_token": "eyJ...",
-            "user": {...}
-        }
-    }
     """
     try:
         # Get request data
@@ -103,8 +86,7 @@ def login():
                 },
             )
 
-        # If not admin, proceed with regular user login
-        # Validate request data using UserLogin schema
+
         login_data = validate_request_data(UserLogin, data)
         # Find user by username or email
         user = find_user_by_username_or_email(login_data.username)
@@ -199,15 +181,6 @@ def refresh_token():
     Requires a valid refresh token in Authorization header
     Handles both admin and user token refresh
 
-    Returns:
-    {
-        "success": true,
-        "message": "Token refreshed successfully",
-        "data": {
-            "access_token": "eyJ...",
-            "user": {...}
-        }
-    }
     """
     try:
         # Get current user ID from refresh token
@@ -313,7 +286,6 @@ def logout():
     }
     """
     try:
-        # Get current token JTI (JWT ID) for blacklisting
         token = get_jwt()
         jti = token["jti"]
 
