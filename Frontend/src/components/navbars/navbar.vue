@@ -32,39 +32,6 @@
                 Dashboard
               </router-link>
             </li>
-            <li class="nav-item dropdown">
-              <a 
-                class="nav-link dropdown-toggle" 
-                href="#" 
-                role="button" 
-                data-bs-toggle="dropdown" 
-                aria-expanded="false"
-              >
-                <i class="fas fa-building me-1"></i>
-                Parking Lots
-              </a>
-              <ul class="dropdown-menu">
-                <li>
-                  <router-link class="dropdown-item" to="/admin/parking-lots">
-                    <i class="fas fa-list me-1"></i>
-                    View All Lots
-                  </router-link>
-                </li>
-                <li>
-                  <router-link class="dropdown-item" to="/admin/parking-lots/create">
-                    <i class="fas fa-plus me-1"></i>
-                    Add New Lot
-                  </router-link>
-                </li>
-                <li><hr class="dropdown-divider"></li>
-                <li>
-                  <router-link class="dropdown-item" to="/admin/spots">
-                    <i class="fas fa-th me-1"></i>
-                    Manage Spots
-                  </router-link>
-                </li>
-              </ul>
-            </li>
             <li class="nav-item">
               <router-link class="nav-link" to="/admin/users" :class="{ active: $route.path === '/admin/users' }">
                 <i class="fas fa-users me-1"></i>

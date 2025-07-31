@@ -169,6 +169,7 @@
             </div>
           </div>
         </div>
+        <ParkingHistory />
       </div>
     </div>
 
@@ -196,6 +197,7 @@ import { useAuthStore } from '@/stores/auth'
 import axios from 'axios'
 import BookingModal from '@/components/user/BookingModal.vue'
 import ReleaseModal from '@/components/user/ReleaseModal.vue'
+import ParkingHistory from '@/components/user/parkingHistory.vue'
 
 const authStore = useAuthStore()
 

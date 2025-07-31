@@ -238,7 +238,7 @@ const handleLogin = async () => {
       if (authStore.user?.role === 'admin') {
         router.push('/admin/dashboard')
       } else {
-        router.push('/dashboard')
+        router.push('/user/dashboard')
       }
     }, 1000)
     

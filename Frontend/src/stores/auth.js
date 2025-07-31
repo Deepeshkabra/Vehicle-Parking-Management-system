@@ -79,7 +79,7 @@ export const useAuthStore = defineStore('auth', {
         }
         
         this.loading = false
-        return Promise.resolve({ success, message })
+        return Promise.resolve({ message, data })
         
       } catch (error) {
         this.loading = false
